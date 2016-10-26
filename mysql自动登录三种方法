@@ -1,0 +1,85 @@
+第1种（主要是为了说明expect的使用场景，没什么实用意义）
+
+一般情况下，我们想要进入MySQL命令模式总是需要按如下交互输入密码确认，才能进入命令行模式：
+
+hashlinux@linux-06bq:~> mysql -u sl -p
+Enter password: 
+其实我们可以使用expect编写脚本，来通过expect与shell交互通信来实现自动登录：
+
+hashlinux@linux-06bq:~> cat mysql.sh 
+#!/usr/local/bin/expect
+ 
+spawn /usr/local/services/mysql/bin/mysql -u sl -p
+expect {
+    "assword" { send "sl\r" }
+}
+interact
+其实这段脚本的意思就是说“执行/usr/local/services/mysql/bin/mysql -u sl -p，等待响应，若匹配assword，则发送sl(即MySQL用户登录密码)，回车，模拟用户手工操作”。
+
+编写完mysql.sh脚本后，赋予执行权限，然后就可以通过执行mysql.sh来自动登录MySQL命令行模式。
+
+hashlinux@linux-06bq:~> chmod +x mysql.sh 
+hashlinux@linux-06bq:~> ./mysql.sh        
+spawn /usr/local/services/mysql/bin/mysql -u sl -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 12912
+Server version: 5.5.14-log MySQL Community Server (GPL)
+ 
+Copyright (c) 2000, 2010, Oracle and/or its affiliates. All rights reserved.
+ 
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+ 
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+ 
+mysql> 
+注：expect拥有众多的参数及丰富的应用场景，有兴趣的同学请自行查看man手册或其它资料。
+
+第2种
+
+通过编辑/home/xxx/.bashrc文件，添加如下代码：
+
+alias mysql="/usr/local/services/mysql/bin/mysql -u sl -psl"
+接下来重新加载.bashrc文件
+
+~$ source .bashrc
+~$ mysql 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 1
+Server version: 5.5.20-log MySQL Community Server (GPL)
+ 
+Copyright (c) 2000, 2011, Oracle and/or its affiliates. All rights reserved.
+ 
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+ 
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+ 
+mysql> 
+第3种
+
+通过修改/home/xxx/.my.cnf，添加登录所需的默认参数值：
+
+  1 [client]
+  2 host=localhost
+  3 user=sl
+  4 password=sl
+这样也可实现自动登录MySQL：
+
+~$ mysql 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 3
+Server version: 5.5.20-log MySQL Community Server (GPL)
+ 
+Copyright (c) 2000, 2011, Oracle and/or its affiliates. All rights reserved.
+ 
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+ 
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+ 
+mysql> 
